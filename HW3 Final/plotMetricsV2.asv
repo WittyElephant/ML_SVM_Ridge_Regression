@@ -1,0 +1,116 @@
+function [AUC,AUPRC] = plotMetricsV2(yPredict, yReal, confidences, legendmap)
+%disp(yPredict);
+AUC = 0;
+AUPRC = 0;
+FPR = zeroes(10, 1);
+TPR = zeroes(10, 1);
+Recall = zeroes(10, 1);
+precision = zeroes(10, 1);
+
+for i = 1:10 %for 10 thresholds
+    Tp = zeros(1, size(yReal,1));
+    Fp = zeros(1, size(yReal,1));
+    notClassified = zeros(1, size(yReal,1));
+    threshold = .45 +.05*i;
+    firstIndex = 1;
+    lastIndex = 19;
+   for c = 1:10 %got to match witht he confidences
+       
+       for k = firstIndex:lastIndex
+          if(yPredict(k) == yReal(k))%possible TP
+               if(confidences(c,yPredict(k)) >= threshold)
+                  Tp(k) = 1;
+               else
+                  notClassified(k) = 1;
+  
+               end
+          elseif(yPredict(k) ~= yReal(k)) %possible Fp
+               if(confidences(c,yPredict(k)) >= threshold)
+                  Fp(k) = 1;
+               else
+                   notClassified(k) = 1;
+               end
+
+          end
+       if c == 2 || c == 4 || c == 6 || c== 8 
+        firstIndex = lastIndex+1;
+        lastIndex = lastIndex+20;
+       else
+        firstIndex = lastIndex+1;
+        lastIndex = lastIndex+19;
+       end
+       end
+   end
+   
+
+
+precision(i) = sum(Tp)/(sum(Fp)+sum(Tp));
+recall(i) = sum(Tp)/(size(yReal,1));
+FPR(i) = sum(Fp)/(size(yReal,1));
+TPR(i) = sum(Tp)/(size(yReal,1));
+end
+
+
+%      disp('FPR');
+%      disp(FPR);    %debugger
+%      disp('Tn');
+%      disp(Tn);
+%      disp('FPR');
+%      disp(FPR);
+%      disp('recall');
+%      disp(recall);
+
+%       [~, I] = sort(FPR);
+  %  plot(sort(FPR),recall(I));
+    plot(FPR,TPR);
+%     disp(recall(I));
+    %display(size(FPR,2));
+    %display(size(recall,2));
+%     AUC = trapz(sort(FPR),recall(I));
+    AUC = trapz(FPR,TPR);
+%     disp(AUC(i));
+% disp('end AUC');
+title('ROC Curves')
+xlabel('FPR')
+ylabel('TPR')
+if( legendmap == 1) %strain
+    legend('BW25113', 'CG2', 'DH5alpha', 'MG1655','P2','P4X', 'W3110', 'rpoA14', 'rpoA27', 'rpoD3');
+elseif(legendmap == 2) %medium
+    legend('MD001', 'MD002', 'MD003', 'MD004','MD005','MD006', 'MD007', 'MD008', 'MD009', 'MD010', 'MD011', ...
+    'MD013', 'MD014', 'MD014', 'MD015','MD016','MD017', 'MD018');
+elseif(legendmap == 3) %enviroment
+    legend('Indole', 'O2-starvation', 'RP-overexpress', 'antibacterial','carbon-limitation','zinc-limitation', 'none');
+elseif(legendmap == 4)%gene_preturbed
+    legend('appY_KO', 'arcA_KO', 'argR_KO', 'cya_KO','fis_OE','fnr_KO', 'frdC_KO', 'na_WT', 'oxyR_KO', 'rpoS_KO', 'soxS_KO', 'tnaA_KO');
+else %joint
+    legend('None/MD001', 'None/MD002', 'None/MD003', 'None/MD006','None/MD008','None/MD009', 'None/MD010', 'None/MD011', ...
+    'None/MD013', 'None/MD014', 'None/MD015', 'None/MD016', 'None/MD017', 'None/MD018', ...
+    'O2-starvation/MD001','O2-starvation/MD005','O2-starvation/MD012', 'Indole/MD001', ...
+    'carbon-limitation/MD004', 'carbon-limitation/MD007', 'antibacterial/MD009', 'RP-overexpress/MD014', 'zinc-limitation/MD008');
+end   
+axis([0 1 0 1]);
+
+
+%-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+title('PR Curves')
+xlabel('Recall')
+ylabel('Precision')
+if(legendmap == 1) %strain
+    legend('BW25113', 'CG2', 'DH5alpha', 'MG1655','P2','P4X', 'W3110', 'rpoA14', 'rpoA27', 'rpoD3');
+elseif(legendmap == 2) %medium
+    legend('MD001', 'MD002', 'MD003', 'MD004','MD005','MD006', 'MD007', 'MD008', 'MD009', 'MD010', 'MD011', 'MD013', 'MD014', 'MD014', 'MD015','MD016','MD017', 'MD018');
+elseif(legendmap == 3) %enviroment
+    legend('Indole', 'O2-starvation', 'RP-overexpress', 'antibacterial','carbon-limitation','zinc-limitation', 'none');
+elseif(legendmap == 4)%gene_preturbed
+    legend('appY_KO', 'arcA_KO', 'argR_KO', 'cya_KO','fis_OE','fnr_KO', 'frdC_KO', 'na_WT', 'oxyR_KO', 'rpoS_KO', 'soxS_KO', 'tnaA_KO');
+else %joint
+    legend('None/MD001', 'None/MD002', 'None/MD003', 'None/MD006','None/MD008','None/MD009', 'None/MD010', 'None/MD011', ...
+    'None/MD013', 'None/MD014', 'None/MD015', 'None/MD016', 'None/MD017', 'None/MD018', ...
+    'O2-starvation/MD001','O2-starvation/MD005','O2-starvation/MD012', 'Indole/MD001', ...
+    'carbon-limitation/MD004', 'carbon-limitation/MD007', 'antibacterial/MD009', 'RP-overexpress/MD014', 'zinc-limitation/MD008');
+end 
+axis([0 1 0 1]);
+hold off
+
+end

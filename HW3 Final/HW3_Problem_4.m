@@ -1,0 +1,182 @@
+%Problem 4
+
+
+% Citation
+%F. Lauer and Y. Guermeur, MSVMpack: a Multi-Class Support Vector Machine Package,
+%Journal of Machine Learning Research, 
+%12:2269-2272, 2011.
+
+%adding the toolbox
+%addpath('C:/Users/Carl Glahn/Desktop/ECS 171/HW3/MSVMpack1.5/matlab');
+addpath(genpath('MSVMpack1.5/matlab'));
+%loading in the data
+
+data = dlmread('growth_input_output.txt');
+growthOutputs = data(:,1);
+
+inputs = data(:,2:end); %cut off the growth rate
+
+%read in the outputs
+%strain, medium, stress, gene_preturbed
+fileID = fopen('other_outputs.txt');
+C = textscan(fileID,'%s %s %s %s');
+fclose(fileID);
+
+%this is just for reformating
+strain_text_Outputs = C{1, 1};
+medium_text_Outputs = C{1, 2};
+enviromental_text_Outputs = C{1, 3};
+gene_perturbed_text_Outputs = C{1, 4};
+
+%now to encode the data
+strainOutputs = zeros(size(strain_text_Outputs, 1), 1);
+mediumOutputs = zeros(size(strain_text_Outputs, 1), 1);
+enviromentalOutputs = zeros(size(strain_text_Outputs, 1), 1);
+gene_perturbedOutputs = zeros(size(strain_text_Outputs, 1), 1);
+
+for k = 1:size(strain_text_Outputs,1)
+    %display(strain_text_Outputs{k});                   %debugger
+    %display(strcmp(strain_text_Outputs{k}, 'MG1655')); %debugger
+    
+   if(strcmp(strain_text_Outputs{k}, 'BW25113') == 1)
+       strainOutputs(k, 1) = 1;
+   elseif(strcmp(strain_text_Outputs{k}, 'CG2') == 1)
+       strainOutputs(k, 1) = 2;
+   elseif(strcmp(strain_text_Outputs{k}, 'DH5alpha') == 1)
+       strainOutputs(k, 1) = 3;
+   elseif(strcmp(strain_text_Outputs{k}, 'MG1655') == 1)
+       strainOutputs(k, 1) = 4;
+   elseif(strcmp(strain_text_Outputs{k}, 'P2') == 1)
+       strainOutputs(k, 1) = 5;
+   elseif(strcmp(strain_text_Outputs{k}, 'P4X') == 1)
+       strainOutputs(k, 1) = 6;
+   elseif(strcmp(strain_text_Outputs{k}, 'W3110') == 1)
+       strainOutputs(k, 1) = 7;
+   elseif(strcmp(strain_text_Outputs{k}, 'rpoA14') == 1)
+       strainOutputs(k, 1) = 8;
+   elseif(strcmp(strain_text_Outputs{k}, 'rpoA27') == 1)
+       strainOutputs(k, 1) = 9;
+   else % must be 'rpoD3'
+       strainOutputs(k, 1) = 10;
+   end
+   %------------------------------------------------------------------------------
+   if(strcmp(medium_text_Outputs{k}, 'MD001') == 1)
+       mediumOutputs(k, 1) = 1;
+   elseif(strcmp(medium_text_Outputs{k}, 'MD002') == 1)
+       mediumOutputs(k, 1) = 2;
+   elseif(strcmp(medium_text_Outputs{k}, 'MD003') == 1)
+       mediumOutputs(k, 1) = 3;
+   elseif(strcmp(medium_text_Outputs{k}, 'MD004') == 1)
+       mediumOutputs(k, 1) = 4;
+   elseif(strcmp(medium_text_Outputs{k}, 'MD005') == 1)
+       mediumOutputs(k, 1) = 5;
+   elseif(strcmp(medium_text_Outputs{k}, 'MD006') == 1)
+       mediumOutputs(k, 1) = 6;
+   elseif(strcmp(medium_text_Outputs{k}, 'MD007') == 1)
+       mediumOutputs(k, 1) = 7;
+   elseif(strcmp(medium_text_Outputs{k}, 'MD008') == 1)
+       mediumOutputs(k, 1) = 8;
+   elseif(strcmp(medium_text_Outputs{k}, 'MD009') == 1)
+       mediumOutputs(k, 1) = 9;
+   elseif(strcmp(medium_text_Outputs{k}, 'MD010') == 1)
+       mediumOutputs(k, 1) = 10;
+   elseif(strcmp(medium_text_Outputs{k}, 'MD011') == 1)
+       mediumOutputs(k, 1) = 11;
+   elseif(strcmp(medium_text_Outputs{k}, 'MD012') == 1)
+       mediumOutputs(k, 1) = 12;
+   elseif(strcmp(medium_text_Outputs{k}, 'MD013') == 1)
+       mediumOutputs(k, 1) = 13;
+   elseif(strcmp(medium_text_Outputs{k}, 'MD014') == 1)
+       mediumOutputs(k, 1) = 14;
+   elseif(strcmp(medium_text_Outputs{k}, 'MD015') == 1)
+       mediumOutputs(k, 1) = 15;
+   elseif(strcmp(medium_text_Outputs{k}, 'MD016') == 1)
+       mediumOutputs(k, 1) = 16;
+   elseif(strcmp(medium_text_Outputs{k}, 'MD017') == 1)
+       mediumOutputs(k, 1) = 17;
+   else % must be 'MD0018'
+       mediumOutputs(k, 1) = 18;
+   end
+   %------------------------------------------------------------------------------
+   x = enviromental_text_Outputs{k};
+   switch x
+       case 'Indole'
+          enviromentalOutputs(k, 1) = 1; 
+       case 'O2-starvation' 
+          enviromentalOutputs(k, 1) = 2; 
+       case 'RP-overexpress'
+          enviromentalOutputs(k, 1) = 3;
+       case 'antibacterial'
+          enviromentalOutputs(k, 1) = 4;
+       case 'carbon-limitation'
+          enviromentalOutputs(k, 1) = 5;
+       case 'Dna-damage'
+          enviromentalOutputs(k, 1) = 0; %none in data set
+       case 'zinc-limitation'
+          enviromentalOutputs(k, 1) = 6;          
+       otherwise %its 'none'
+          enviromentalOutputs(k, 1) = 7;
+       
+   end
+   %---------------------------------------------------------------------------
+   y = gene_perturbed_text_Outputs{k};
+   switch y
+       case 'appY_KO'
+          gene_perturbedOutputs(k, 1) = 1; 
+       case 'arcA_KO' 
+          gene_perturbedOutputs(k, 1) = 2; 
+       case 'argR_KO'
+          gene_perturbedOutputs(k, 1) = 3;
+       case 'cya_KO'
+          gene_perturbedOutputs(k, 1) = 4;
+       case 'fis_OE'
+          gene_perturbedOutputs(k, 1) = 0;
+       case 'fnr_KO'
+          gene_perturbedOutputs(k, 1) = 5;
+       case 'frdC_KO'
+          gene_perturbedOutputs(k, 1) = 6;
+       case 'na_WT'
+          gene_perturbedOutputs(k, 1) = 7;
+       case 'oxyR_KO'
+          gene_perturbedOutputs(k, 1) = 8;
+       case 'rpoS_KO'
+          gene_perturbedOutputs(k, 1) = 9;
+       case 'soxS_KO'
+          gene_perturbedOutputs(k, 1) = 10;
+       otherwise %its 'tnaA_KO'
+          gene_perturbedOutputs(k, 1) = 11;
+       
+   end
+end
+
+numStrains = 10;
+numEnviroments = 7;
+numGenepreturbed = 12;
+numMediums = 8;
+
+
+%now we got to find the nonzero weights
+[nnz, ~] = growth_rate_output(inputs, growthOutputs);
+% nnz is the list of indicies that we care about
+
+%now for the toolbax part
+%Strain
+[strain_cv_error, strain_cv_labels, indexes] = kfold(10, inputs(:,nnz), strainOutputs, '-m WW -w 20 -a .8 -k 1');
+strainConfidences =dlmread('strainConfidences.txt');
+[strainAUC,strainAUPRC] = plotMetricsV2(strain_cv_labels(indexes), strainOutputs(indexes), strainConfidences);
+
+%medium factors
+[medium_cv_error, medium_cv_labels,indexes] = kfold(10, inputs(:,nnz), mediumOutputs, '-m WW -w 20 -a .7 -k 1');
+ mediumConfidences =dlmread('mediumConfidences.txt');
+ [mediumAUC,mediumAUPRC] = plotMetricsV2(medium_cv_labels(indexes), mediumOutputs(indexes), mediumConfidences);
+ 
+%enviromental factors
+[enviromental_cv_error, enviromental_cv_labels, indexes] = kfold(10, inputs(:,nnz), enviromentalOutputs, '-m WW -w 20 -a .7 -k 1');
+enviroConfidences =dlmread('enviroConfidences.txt');
+[enviromentalAUC,enviromentalAUPRC] = plotMetricsV2(enviromental_cv_labels(indexes), enviromentalOutputs(indexes),enviroConfidences);
+
+%gene_perturbation factors
+[gene_perturbed_cv_error, gene_perturbed_cv_labels, indexes] = kfold(10, inputs(:,nnz), gene_perturbedOutputs, '-m WW -w 20 -a .7 -k 1');
+geneConfidences =dlmread('geneConfidences.txt');
+[gene_perturbedAUC,gene_perturbedAUPRC] = plotMetricsV2(gene_perturbed_cv_labels(indexes), gene_perturbedOutputs(indexes),geneConfidences);
+

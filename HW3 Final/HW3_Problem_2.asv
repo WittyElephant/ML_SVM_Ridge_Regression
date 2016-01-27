@@ -1,0 +1,41 @@
+%Problem 2
+clear();
+
+%loading in the data
+
+data = dlmread('growth_input_output.txt');
+
+% we will split the data
+
+% growth = data(:,1);
+% inputs = data(:,2:end);
+
+weightMatrix = ones(100,4496); %to store the mean of each sample
+%were gonna do a bunch of bootstraps and store the weights of each boot
+%strap
+
+for  i = 1:100
+    chosenIndexes = randi(194,1,194); %picking the random sample
+    growth = data(chosenIndexes,1);   %picking the coresponding inputs and outputs
+    inputs = data(chosenIndexes,2:end);
+    [weights, results] = growth_rate_output(inputs, growth);
+    weightMatrix(i,:) = weights;
+end
+
+%now we have the weights of 100 bootstrap samples
+%generating the confidence interval for each sample (I'm choosing 95%)
+
+sampleBounds = ones(size(data,1),2); %the final list of 194 bounds per samplle
+for i = 1: size(data,1)
+    predictedY = ones(1,100);
+    sample = data(i,2:end);
+    for j = 1:100
+       predictedY(i) = horzcat(ones(1,1),sample)*(weightMatrix(j,:)'); %this generates a prediction based on the weights
+    end
+    predicted
+    %disp(mean(weightMatrix));
+    sampleBounds(i,2) = mean(predictedY) + 1.96*(std(predictedY)/sqrt(100));
+    sampleBounds(i,1) = mean(predictedY) - 1.96*(std(predictedY)/sqrt(100));
+end
+
+%display(results);

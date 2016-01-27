@@ -1,0 +1,146 @@
+%Problem 6
+
+
+% Citation
+%F. Lauer and Y. Guermeur, MSVMpack: a Multi-Class Support Vector Machine Package,
+%Journal of Machine Learning Research, 
+%12:2269-2272, 2011.
+
+%adding the toolbox
+%addpath('C:/Users/Carl Glahn/Desktop/ECS 171/HW3/MSVMpack1.5/matlab');
+addpath(genpath('MSVMpack1.5/matlab'));
+%loading in the data
+
+data = dlmread('growth_input_output.txt');
+growthOutputs = data(:,1);
+
+inputs = data(:,2:end); %cut off the growth rate
+
+%read in the outputs
+%strain, medium, stress, gene_preturbed
+fileID = fopen('other_outputs.txt');
+C = textscan(fileID,'%s %s %s %s');
+fclose(fileID);
+
+%this is just for reformating
+strain_text_Outputs = C{1, 1};
+medium_text_Outputs = C{1, 2};
+enviromental_text_Outputs = C{1, 3};
+gene_perturbed_text_Outputs = C{1, 4};
+
+%now to encode the data
+
+jointOutputs = zeros(size(strain_text_Outputs, 1), 1);
+
+
+for k = 1:size(strain_text_Outputs,1)
+    
+   %jointOutputs
+   x = enviromental_text_Outputs{k};
+   switch x
+       case 'none'
+           if(strcmp(medium_text_Outputs{k}, 'MD001') == 1)
+               jointOutputs(k, 1) = 1;
+           elseif(strcmp(medium_text_Outputs{k}, 'MD002') == 1)
+               jointOutputs(k, 1) = 2;
+           elseif(strcmp(medium_text_Outputs{k}, 'MD003') == 1)
+               jointOutputs(k, 1) = 3;
+           elseif(strcmp(medium_text_Outputs{k}, 'MD006') == 1)
+               jointOutputs(k, 1) = 4;
+           elseif(strcmp(medium_text_Outputs{k}, 'MD008') == 1)
+               jointOutputs(k, 1) = 5;
+           elseif(strcmp(medium_text_Outputs{k}, 'MD009') == 1)
+               jointOutputs(k, 1) = 6;
+           elseif(strcmp(medium_text_Outputs{k}, 'MD010') == 1)
+               jointOutputs(k, 1) = 7;
+           elseif(strcmp(medium_text_Outputs{k}, 'MD011') == 1)
+               jointOutputs(k, 1) = 8;
+           elseif(strcmp(medium_text_Outputs{k}, 'MD013') == 1)
+               jointOutputs(k, 1) = 9;
+           elseif(strcmp(medium_text_Outputs{k}, 'MD014') == 1)
+               jointOutputs(k, 1) = 10;
+           elseif(strcmp(medium_text_Outputs{k}, 'MD015') == 1)
+               jointOutputs(k, 1) = 11;
+           elseif(strcmp(medium_text_Outputs{k}, 'MD016') == 1)
+               jointOutputs(k, 1) = 12;
+           elseif(strcmp(medium_text_Outputs{k}, 'MD017') == 1)
+               jointOutputs(k, 1) = 13;
+           else % must be 'MD0018'
+               jointOutputs(k, 1) = 14;
+           end
+       case 'O2-starvation' 
+          if(strcmp(medium_text_Outputs{k}, 'MD001') == 1)
+               jointOutputs(k, 1) = 15;
+           elseif(strcmp(medium_text_Outputs{k}, 'MD005') == 1)
+               jointOutputs(k, 1) = 16;
+           elseif(strcmp(medium_text_Outputs{k}, 'MD012') == 1)
+               jointOutputs(k, 1) = 17;
+           end
+       case 'Indole'
+           if(strcmp(medium_text_Outputs{k}, 'MD001') == 1)
+               jointOutputs(k, 1) = 18;
+           end
+       case 'carbon-limitation'
+           if(strcmp(medium_text_Outputs{k}, 'MD004') == 1)
+               jointOutputs(k, 1) = 19;
+           elseif(strcmp(medium_text_Outputs{k}, 'MD007') == 1)
+               jointOutputs(k, 1) = 20;
+           end
+       case 'antibacterial'
+          if(strcmp(medium_text_Outputs{k}, 'MD009') == 1)
+               jointOutputs(k, 1) = 21;
+          end
+       case 'RP-overexpress'
+           if(strcmp(medium_text_Outputs{k}, 'MD014') == 1)
+               jointOutputs(k, 1) = 22;
+           end
+       case 'zinc-limitation'
+          if(strcmp(medium_text_Outputs{k}, 'MD008') == 1)
+               jointOutputs(k, 1) = 23;
+          end
+       otherwise %its 'dna damage'
+          disp('ERROR');
+       
+   end
+   
+end
+
+
+%now we do PCA
+%step 1: center your data
+centeredInputs = zeros(size(inputs));
+for i = 1:size(inputs,1)
+    centeredInputs = inputs(i,:) - mean(inputs);
+end
+
+%step 2 find A = x^tx
+A = centeredInputs.'*centeredInputs;
+
+%step 3 find eigen vectors and values
+[Evectors,Evalues] = eig(A);
+
+%now we go back to the original data and generate our 3 PCA's
+temp1 = zeros(size(inputs));
+temp2 = zeros(size(inputs));
+temp3 = zeros(size(inputs));
+for i = 1:size(inputs,1)
+    
+    temp1(i,:) = inputs(i,:) - Evectors(:,1)';
+    temp2(i,:) = inputs(i,:) - Evectors(:,2)';
+    temp3(i,:) = inputs(i,:) - Evectors(:,3)';
+end
+
+PCA = zeros(size(inputs,1),3); %one colum for each input
+PCA(:,1) = temp1 * Evectors(:,1);
+PCA(:,2) = temp2 * Evectors(:,2);
+PCA(:,3) = temp3 * Evectors(:,3);
+
+
+%now for the toolbax part
+
+%joint factors
+[PCA_cv_error, PCA_cv_labels,indexes] = kfold(10, PCA, jointOutputs, '-m WW -w 20 -a .6 -k 1');
+ PCAConfidences =dlmread('jointConfidences.txt');
+[PCA_AUC,PCA_AUPRC] = plotMetricsV2(PCA_cv_labels(indexes), jointOutputs(indexes),PCAConfidences);
+
+
